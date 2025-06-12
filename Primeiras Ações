@@ -4,5 +4,18 @@ Resetando o roteador
 Verificando as interfaces
 /interface ethernet print
 
-Ativando a primeira interface para receber IP do modem
+Adicionando a primeira interface para receber IP do modem
 /ip dhcp-client add interface=ether1
+
+Ativando a interface ether1
+/ip dhcp-client enable numbers=0     
+
+Verificando o endereço recebido via modem
+/ip address print
+
+Criando um novo usuário administrador
+/user add name=JoelFernandes password=connect@2025 group=full 
+
+Desativando o usuário admin
+/user disable admin
+
