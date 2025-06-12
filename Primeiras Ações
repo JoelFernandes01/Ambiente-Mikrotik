@@ -19,3 +19,46 @@ Criando um novo usuário administrador
 Desativando o usuário admin
 /user disable admin
 
+Desatibitar o Btest Server
+/tool bandwidth-server set enabled=no 
+
+Criando uma lista de interfece 
+/interface list add name=Suporte
+
+Configurando a lista de interface
+/interface list member add interface=ether5 list=Suporte
+
+Imprimindo a lista de interface
+/interface list member print
+
+Configurando acesso via MAC apenas para quem é do grupo Suporte
+/tool mac-server set allowed-interface-list=Suporte 
+/tool mac-server mac-winbox set allowed-interface-list=Suporte 
+
+Configurando sobre visibilidade do roteador via protocolo da Mikrotik
+/interface list member add interface=ether1 list=WAN 
+/interface list member add interface=ether2 list=WAN
+/ip neighbor discovery-settings set discover-interface-list=!WAN
+
+Configurando o DNS
+/ip dns set servers=1.1.1.1,9.9.9.9
+
+Configurando o NTP
+/system ntp client set enabled=yes
+/system ntp client set server-dns-names=pool.ntp.br
+Definir o fuso horário
+/system clock set time-zone-autodetect=no time-zone-name=America/Sao_Paulo
+
+Configurando os LOG´s diversos
+/system logging action add disk-file-count=5 disk-file-name=log-erros name=connect-erros target=disk
+/system logging action add disk-file-count=5 disk-file-name=log-acessos name=connect-acessos target=disk
+/system logging add action=connect-erros topics=critical 
+/system logging add action=connect-erros topics=error    
+/system logging add action=connect-acessos topics=account
+
+
+
+
+
+
+
