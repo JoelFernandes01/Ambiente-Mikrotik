@@ -56,6 +56,24 @@ Configurando os LOG´s diversos
 /system logging add action=connect-erros topics=error    
 /system logging add action=connect-acessos topics=account
 
+Desabilitar serviços 
+/ip service set telnet disabled=yes
+/ip service set ftp disabled=yes
+/ip service set www disabled=yes
+/ip service set ssh disabled=yes
+/ip service set api disabled=yes
+/ip service set winbox port=9865
+/ip service set api-ssl disabled=yes
+
+Desabilitar portas de serviços
+/ip firewall service-port disable dccp 
+/ip firewall service-port disable ftp 
+/ip firewall service-port disable h323 
+/ip firewall service-port disable irc 
+/ip firewall service-port disable pptp 
+/ip firewall service-port disable sctp 
+/ip firewall service-port disable tftp 
+/ip firewall service-port disable udplite
 
 
 
