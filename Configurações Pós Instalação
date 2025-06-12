@@ -1,0 +1,263 @@
+Comandos usados
+# export = para ver as configurações atuais
+# terse = para mostrar os parâmetros na mesma linha
+
+Nomear o nome do equipamento
+/system identity set name=Mikrotik 9865
+
+Desabilitar serviços 
+/ip service set telnet disabled=yes
+/ip service set ftp disabled=yes
+/ip service set www disabled=yes
+/ip service set ssh disabled=yes
+/ip service set api disabled=yes
+/ip service set winbox port=9865
+/ip service set api-ssl disabled=yes
+
+Desabilitar portas de serviços
+/ip firewall service-port disable dccp 
+/ip firewall service-port disable ftp 
+/ip firewall service-port disable h323 
+/ip firewall service-port disable irc 
+/ip firewall service-port disable pptp 
+/ip firewall service-port disable sctp 
+/ip firewall service-port disable tftp 
+/ip firewall service-port disable udplite
+
+/ip dhcp-client add comment=TIM - 01 - Script disabled=no interface=ether1
+
+/ip firewall filter
+/ip firewall export
+
+Zerar as conexões ativas
+/ip firewall connection remove [find]
+
+Script para ser estudado
+:log warning "PRIMARY link seems to be DOWN - Running Down script" 
+
+/ip route set [find comment="Default Route"] distance=15
+
+/ip firewall connection {:foreach i in [find protocol="tcp"] do={remove $i}}
+/ip firewall connection {:foreach i in [find protocol="udp"] do={remove $i}}
+
+/ip  firewall filter set [find comment ="tcp reset"] disabled=no
+
+delay delay-time=10
+
+/ip  firewall filter set [find comment ="tcp reset"] disabled=yes
+
+/system script run DynDnsF
+
+/tool e-mail send to=myemailaddress@noemail.com subject="$[/system identity get name] network change"  body="Primary connection failed and successfully connected to secondary"
+
+###############################################################################################################################################################
+[joel.fernandes@Servidor_Firewall] > /interface list export terse
+# aug/23/2023 08:03:16 by RouterOS 6.49.13
+# software id = RN4D-5UK6
+#
+# model = RouterBOARD 941-2nD
+# serial number = 9473055B058D
+/interface list add exclude=dynamic name=discover
+/interface list add name=mactel
+/interface list add name=mac-winbox
+/interface list add name=ALLW
+/interface list add name=WAN
+/interface list member add interface=bridge1 list=discover
+/interface list member add interface=LAN03 list=discover
+/interface list member add interface=LAN04 list=discover
+/interface list member add interface=WAN03-P05 list=discover
+/interface list member add interface=bridge1 list=mactel
+/interface list member add interface=bridge1 list=mac-winbox
+/interface list member add interface=WAN01-P01 list=WAN
+/interface list member add interface=WAN02-P02 list=WAN
+/interface list member add interface=pppoe-client-click-net list=WAN
+
+[joel.fernandes@Servidor_Firewall] > /ip dhcp-server network export terse 
+# aug/23/2023 08:09:23 by RouterOS 6.49.13
+# software id = RN4D-5UK6
+#
+# model = RouterBOARD 941-2nD
+# serial number = 9473055B058D
+/ip dhcp-server network add address=10.0.39.0/24 dns-server=10.0.39.6,10.0.39.254,189.6.0.184,192.168.0.1,189.6.0.176 domain=nverse.local gateway=10.0.39.254
+
+
+[joel.fernandes@Servidor_Firewall] > ip firewall export terse 
+# aug/23/2023 08:29:29 by RouterOS 6.49.11
+# software id = RN4D-5UK6
+#
+# model = RouterBOARD 941-2nD
+# serial number = 9473055B058D
+/ip firewall layer7-protocol add name=torrent-wwws regexp="^.*(get|GET).+(torrent|thepiratebay|isohunt|entertane|demonoid|btjunkie|mininova|flixflux|vertor|h33t|zoozle|bitnova|bitsoup|meganova|fulldls|btbot
+|fenopy|gpirate|commonbits).*\$"
+/ip firewall layer7-protocol add name=torrent-dns regexp="^.+(torrent|thepiratebay|isohunt|entertane|demonoid|btjunkie|mininova|flixflux|vertor|h33t|zoozle|bitnova|bitsoup|meganova|fulldls|btbot|fenopy|gpir
+ate|commonbits).*\$"
+/ip firewall layer7-protocol add comment="P2P WWW web base cnoetent Matching / Zaib" name=p2p_www regexp="^.*(get|GET).+(torrent|thepiratebay|isohunt|entertane|demonoid|btjunkie|mininova|flixflux|vertor|h33
+t|zoozle|bitnova|bitsoup|meganova|fulldls|btbot|fenopy|gpirate|commonbits).*\$"
+/ip firewall layer7-protocol add comment="P2P DNS Matching / Zaib" name=p2p_dns regexp="^.+(torrent|thepiratebay|isohunt|entertane|demonoid|btjunkie|mininova|flixflux|vertor|h33t|zoozle|bitnova|bitsoup|mega
+nova|fulldls|btbot|fenopy|gpirate|commonbits).*\$"
+/ip firewall layer7-protocol add comment="Block Bit Torrent" name=layer7-bittorrent-exp regexp="^(\\x13bittorrent protocol|azver\\x01\$|get /scrape\\\?info_hash=get /announce\\\?info_hash=|get /client/bitco
+met/|GET /data\\\?fid=)|d1:ad2:id20:|\\x08'7P\\)[RP]"
+/ip firewall layer7-protocol add name=bittorrent regexp="^(\\x13bittorrent protocol|azver\\x01\$|get /scrape\\\?info_hash=get /announce\\\?info_hash=|get /client/bitcomet/|GET /data\\\?fid=)|d1:ad2:id20:|\\
+x08'7P\\)[RP]"
+/ip firewall address-list add address=65.49.0.0/17 comment="disabled=no list=UltraSurfServers" list=UltraSurfServers
+/ip firewall address-list add address=204.107.140.0/24 comment="disabled=no list=UltraSurfServers" list=Ultrasuf
+/ip firewall filter add action=accept chain=input comment="defconf: accept ICMP" protocol=icmp
+/ip firewall filter add action=accept chain=input comment="defconf: accept established,related" connection-state=established,related
+/ip firewall filter add action=accept chain=input comment="allow IPsec NAT" dst-port=4500 protocol=udp
+/ip firewall filter add action=accept chain=input comment="allow IKE" dst-port=500 protocol=udp
+/ip firewall filter add action=accept chain=input comment="allow l2tp" dst-port=1701 protocol=udp
+/ip firewall filter add action=accept chain=input comment="allow pptp" dst-port=1723 protocol=tcp
+/ip firewall filter add action=accept chain=input comment="allow sstp" dst-port=443 protocol=tcp
+/ip firewall filter add action=drop chain=input comment="defconf: drop all from WAN" in-interface=WAN01-P01
+/ip firewall filter add action=fasttrack-connection chain=forward comment="defconf: fasttrack" connection-state=established,related
+/ip firewall filter add action=accept chain=forward comment="defconf: accept established,related" connection-state=established,related
+/ip firewall filter add action=drop chain=forward comment="defconf: drop invalid 0  analisar" connection-state=invalid log=yes
+/ip firewall filter add action=drop chain=forward comment="defconf:  drop all from WAN not DSTNATed" connection-nat-state=!dstnat connection-state=new in-interface=WAN01-P01
+/ip firewall filter add action=accept chain=forward comment=";;; permite estabelecer conex es" connection-state=established
+/ip firewall filter add action=accept chain=forward comment=";;; permitir conex es relacionadas" connection-state=related
+/ip firewall filter add action=drop chain=virus comment=";;; Drop Blaster Worm" dst-port=135-139 protocol=tcp
+/ip firewall filter add action=drop chain=virus comment=";;; Drop Messenger Worm" dst-port=135-139 protocol=udp
+/ip firewall filter add action=jump chain=forward comment=";;; jump to the virus chain -  analisar" jump-target=virus
+/ip firewall filter add action=accept chain=input comment="aceitando 50 pings a cada 5 segundos" limit=50/5s,2:packet protocol=icmp
+/ip firewall filter add action=drop chain=input comment="bloqueando o excesso" protocol=icmp
+/ip firewall filter add action=accept chain=forward comment=";;; Allow HTTP" dst-port=80 protocol=tcp
+/ip firewall filter add action=accept chain=forward comment="Servidor VOIP" dst-address=10.0.39.4 dst-port=80 log=yes protocol=tcp src-address=10.0.39.0/24
+/ip firewall filter add action=accept chain=forward comment="Servidor VOIP" dst-port=5432 protocol=udp
+/ip firewall filter add action=accept chain=forward comment="Servidor VOIP" dst-port=5060 protocol=udp
+/ip firewall filter add action=accept chain=forward comment=";;; Allow SMTP" dst-port=25 protocol=tcp
+/ip firewall filter add action=accept chain=forward comment=";;; allow TCP" protocol=tcp
+/ip firewall filter add action=accept chain=forward comment=";;; allow ping" protocol=icmp
+/ip firewall filter add action=accept chain=forward comment=";;; allow gre" protocol=gre
+/ip firewall filter add action=accept chain=forward comment=";;; allow ports 10000" dst-port=20000 protocol=tcp src-port=10000
+/ip firewall filter add action=accept chain=forward comment=";;; allow ports udp" dst-port=20000 protocol=udp src-port=10000
+/ip firewall filter add action=accept chain=forward comment=";;; allow ports 443" dst-port=443 protocol=tcp
+/ip firewall filter add action=accept chain=forward comment=";;; allow ports 443 udp" dst-port=443 protocol=udp
+/ip firewall filter add action=accept chain=forward comment=";;; allow ports 8000" dst-port=8000 protocol=udp src-port=6000
+/ip firewall filter add action=accept chain=forward comment=";;; allow ports 6000" dst-port=8000 protocol=tcp src-port=6000
+/ip firewall filter add action=accept chain=forward comment=";;; allow ports 123" protocol=udp src-port=123
+/ip firewall filter add action=accept chain=forward comment=";;; allow ports 123 tcp" protocol=tcp src-port=123
+/ip firewall filter add action=accept chain=forward comment=";;; allow 5060 udp" log=yes protocol=udp src-port=5060-5061
+/ip firewall filter add action=accept chain=forward comment=";;; allow 5060 udp" dst-port=1194 log=yes protocol=udp src-port=1194
+/ip firewall filter add action=accept chain=forward comment=";;; allow 5060 tcp" log=yes protocol=tcp src-port=5060-5061
+/ip firewall filter add action=accept chain=forward comment=";;; allow 8039 tcp" dst-port=8039 log=yes protocol=tcp src-port=8039
+/ip firewall filter add action=accept chain=forward comment=";;; allow 8039udp" dst-port=8039 log=yes protocol=udp src-port=8039
+/ip firewall filter add action=accept chain=forward comment=";;; allow 5432" dst-port=5432 log=yes protocol=udp
+/ip firewall filter add action=accept chain=forward comment=";;; allow udp" protocol=udp
+/ip firewall filter add action=log chain=input comment="Log everything else" log-prefix="DROP INPUT"
+/ip firewall filter add action=accept chain=forward comment=VOIP dst-port=5061 protocol=tcp
+/ip firewall filter add action=accept chain=forward comment=VOIP dst-port=5061 protocol=udp
+/ip firewall filter add action=accept chain=forward comment=VOIP dst-port=5060 protocol=udp
+/ip firewall filter add action=accept chain=input comment=VOIP dst-port=5060-5061 protocol=tcp
+/ip firewall filter add action=accept chain=input comment=VOIP dst-port=5060-5061 protocol=udp
+/ip firewall filter add action=accept chain=input comment=VOIP dst-port=10000-20000 protocol=tcp
+/ip firewall filter add action=accept chain=input comment=VOIP dst-port=1194 protocol=udp
+/ip firewall filter add action=accept chain=input comment=VOIP dst-port=10000-20000 protocol=udp
+/ip firewall filter add action=accept chain=input comment=VOIP dst-port=2543 protocol=tcp
+/ip firewall filter add action=accept chain=input comment=VOIP dst-port=1751 protocol=udp
+/ip firewall filter add action=accept chain=input comment=VOIP dst-port=5900-5901 protocol=tcp
+/ip firewall filter add action=accept chain=input comment=VOIP dst-port=5900-5901 protocol=udp
+/ip firewall filter add action=accept chain=input comment="defconf: accept ICMP" protocol=icmp
+/ip firewall filter add action=accept chain=input comment="defconf: accept established,related" connection-state=established,related
+/ip firewall filter add action=accept chain=input comment="allow IPsec NAT" dst-port=4500 protocol=udp
+/ip firewall filter add action=accept chain=input comment="allow IKE" dst-port=500 protocol=udp
+/ip firewall filter add action=accept chain=input comment="allow l2tp" dst-port=1701 protocol=udp
+/ip firewall filter add action=accept chain=input comment="allow pptp" dst-port=1723 protocol=tcp
+/ip firewall filter add action=accept chain=input comment="allow sstp" dst-port=443 protocol=tcp
+/ip firewall filter add action=drop chain=input comment="defconf: drop all from WAN" in-interface=WAN01-P01
+/ip firewall filter add action=fasttrack-connection chain=forward comment="defconf: fasttrack" connection-state=established,related
+/ip firewall filter add action=accept chain=forward comment="defconf: accept established,related" connection-state=established,related
+/ip firewall filter add action=drop chain=forward comment="defconf: drop invalid 0  analisar" connection-state=invalid log=yes
+/ip firewall filter add action=drop chain=forward comment="defconf:  drop all from WAN not DSTNATed" connection-nat-state=!dstnat connection-state=new in-interface=WAN01-P01
+/ip firewall filter add action=accept chain=forward comment=";;; permite estabelecer conex es" connection-state=established
+/ip firewall filter add action=accept chain=forward comment=";;; permitir conex es relacionadas" connection-state=related
+/ip firewall filter add action=drop chain=virus comment=";;; Drop Blaster Worm" dst-port=135-139 protocol=tcp
+/ip firewall filter add action=drop chain=virus comment=";;; Drop Messenger Worm" dst-port=135-139 protocol=udp
+/ip firewall filter add action=jump chain=forward comment=";;; jump to the virus chain -  analisar" jump-target=virus
+/ip firewall filter add action=accept chain=input comment="aceitando 50 pings a cada 5 segundos" limit=50/5s,2:packet protocol=icmp
+/ip firewall filter add action=drop chain=input comment="bloqueando o excesso" protocol=icmp
+/ip firewall filter add action=accept chain=forward comment=";;; Allow HTTP" dst-port=80 protocol=tcp
+/ip firewall filter add action=accept chain=forward comment="Servidor VOIP" dst-address=10.0.39.4 dst-port=80 log=yes protocol=tcp src-address=10.0.39.0/24
+/ip firewall filter add action=accept chain=forward comment="Servidor VOIP" dst-port=5432 protocol=udp
+/ip firewall filter add action=accept chain=forward comment="Servidor VOIP" dst-port=5060 protocol=udp
+/ip firewall filter add action=accept chain=forward comment=";;; Allow SMTP" dst-port=25 protocol=tcp
+/ip firewall filter add action=accept chain=forward comment=";;; allow TCP" protocol=tcp
+/ip firewall filter add action=accept chain=forward comment=";;; allow ping" protocol=icmp
+/ip firewall filter add action=accept chain=forward comment=";;; allow gre" protocol=gre
+/ip firewall filter add action=accept chain=forward comment=";;; allow ports 10000" dst-port=20000 protocol=tcp src-port=10000
+/ip firewall filter add action=accept chain=forward comment=";;; allow ports udp" dst-port=20000 protocol=udp src-port=10000
+/ip firewall filter add action=accept chain=forward comment=";;; allow ports 443" dst-port=443 protocol=tcp
+/ip firewall filter add action=accept chain=forward comment=";;; allow ports 443 udp" dst-port=443 protocol=udp
+/ip firewall filter add action=accept chain=forward comment=";;; allow ports 8000" dst-port=8000 protocol=udp src-port=6000
+/ip firewall filter add action=accept chain=forward comment=";;; allow ports 6000" dst-port=8000 protocol=tcp src-port=6000
+/ip firewall filter add action=accept chain=forward comment=";;; allow ports 123" protocol=udp src-port=123
+/ip firewall filter add action=accept chain=forward comment=";;; allow ports 123 tcp" protocol=tcp src-port=123
+/ip firewall filter add action=accept chain=forward comment=";;; allow 5060 udp" log=yes protocol=udp src-port=5060-5061
+/ip firewall filter add action=accept chain=forward comment=";;; allow 5060 udp" dst-port=1194 log=yes protocol=udp src-port=1194
+/ip firewall filter add action=accept chain=forward comment=";;; allow 5060 tcp" log=yes protocol=tcp src-port=5060-5061
+/ip firewall filter add action=accept chain=forward comment=";;; allow 8039 tcp" dst-port=8039 log=yes protocol=tcp src-port=8039
+/ip firewall filter add action=accept chain=forward comment=";;; allow 8039udp" dst-port=8039 log=yes protocol=udp src-port=8039
+/ip firewall filter add action=accept chain=forward comment=";;; allow 5432" dst-port=5432 log=yes protocol=udp
+/ip firewall filter add action=accept chain=forward comment=";;; allow udp" protocol=udp
+/ip firewall filter add action=log chain=input comment="Log everything else" log-prefix="DROP INPUT"
+/ip firewall filter add action=accept chain=forward comment=VOIP dst-port=5061 protocol=tcp
+/ip firewall filter add action=accept chain=forward comment=VOIP dst-port=5061 protocol=udp
+/ip firewall filter add action=accept chain=forward comment=VOIP dst-port=5060 protocol=udp
+/ip firewall filter add action=accept chain=input comment=VOIP dst-port=5060-5061 protocol=tcp
+/ip firewall filter add action=accept chain=input comment=VOIP dst-port=5060-5061 protocol=udp
+/ip firewall filter add action=accept chain=input comment=VOIP dst-port=10000-20000 protocol=tcp
+/ip firewall filter add action=accept chain=input comment=VOIP dst-port=1194 protocol=udp
+/ip firewall filter add action=accept chain=input comment=VOIP dst-port=10000-20000 protocol=udp
+/ip firewall filter add action=accept chain=input comment=VOIP dst-port=2543 protocol=tcp
+/ip firewall filter add action=accept chain=input comment=VOIP dst-port=1751 protocol=udp
+/ip firewall filter add action=accept chain=input comment=VOIP dst-port=5900-5901 protocol=tcp
+/ip firewall filter add action=accept chain=input comment=VOIP dst-port=5900-5901 protocol=udp
+/ip firewall mangle add action=mark-packet chain=postrouting comment="p2p download" disabled=yes layer7-protocol=p2p_www new-packet-mark="p2p download" passthrough=no
+/ip firewall mangle add action=mark-packet chain=postrouting disabled=yes layer7-protocol=p2p_dns new-packet-mark="p2p download" passthrough=no
+/ip firewall mangle add action=mark-connection chain=postrouting connection-state=new disabled=yes new-connection-mark=con_link_01 out-interface=WAN01-P01 passthrough=yes
+/ip firewall mangle add action=mark-connection chain=postrouting connection-state=new disabled=yes new-connection-mark=con_link_02 out-interface=WAN02-P02 passthrough=yes
+/ip firewall mangle add action=mark-routing chain=prerouting connection-mark=con_link_01 disabled=yes in-interface=bridge1 new-routing-mark=via_link01 passthrough=yes
+/ip firewall mangle add action=mark-routing chain=prerouting connection-mark=con_link_02 disabled=yes in-interface=bridge1 new-routing-mark=via_link02 passthrough=yes
+/ip firewall mangle add action=mark-packet chain=postrouting comment="p2p download" disabled=yes layer7-protocol=p2p_www new-packet-mark="p2p download" passthrough=no
+/ip firewall mangle add action=mark-packet chain=postrouting disabled=yes layer7-protocol=p2p_dns new-packet-mark="p2p download" passthrough=no
+/ip firewall mangle add action=mark-connection chain=postrouting connection-state=new disabled=yes new-connection-mark=con_link_01 out-interface=WAN01-P01 passthrough=yes
+/ip firewall mangle add action=mark-connection chain=postrouting connection-state=new disabled=yes new-connection-mark=con_link_02 out-interface=WAN02-P02 passthrough=yes
+/ip firewall mangle add action=mark-routing chain=prerouting connection-mark=con_link_01 disabled=yes in-interface=bridge1 new-routing-mark=via_link01 passthrough=yes
+/ip firewall mangle add action=mark-routing chain=prerouting connection-mark=con_link_02 disabled=yes in-interface=bridge1 new-routing-mark=via_link02 passthrough=yes
+/ip firewall nat add action=masquerade chain=srcnat comment="defconf: masquerade" out-interface-list=WAN
+/ip firewall nat add action=masquerade chain=srcnat comment="defconf: masquerade" dst-address=10.0.39.4
+/ip firewall nat add action=masquerade chain=srcnat comment="defconf: masquerade" dst-address=192.168.0.1
+/ip firewall nat add action=masquerade chain=srcnat comment="defconf: masquerade" out-interface=WAN02-P02
+/ip firewall nat add action=masquerade chain=srcnat comment="defconf: masquerade" disabled=yes out-interface=LAN04
+/ip firewall nat add action=redirect chain=dstnat disabled=yes dst-port=80 in-interface=bridge1 log=yes protocol=tcp to-ports=3128
+/ip firewall nat add action=dst-nat chain=dstnat dst-address=10.1.1.2 dst-port=5060-5061 log=yes protocol=udp to-addresses=10.0.39.4 to-ports=5060-5061
+/ip firewall nat add action=dst-nat chain=dstnat dst-address=10.1.1.2 dst-port=2543 protocol=tcp to-addresses=10.0.39.4 to-ports=2543
+/ip firewall nat add action=dst-nat chain=dstnat dst-address=10.1.1.2 dst-port=2543 protocol=udp to-addresses=10.0.39.4 to-ports=2543
+/ip firewall nat add action=dst-nat chain=dstnat dst-address=10.1.1.2 dst-port=10000-20000 protocol=tcp to-addresses=10.0.39.4 to-ports=10000-20000
+/ip firewall nat add action=dst-nat chain=dstnat dst-address=10.1.1.2 dst-port=10000-20000 protocol=udp to-addresses=10.0.39.4 to-ports=10000-20000
+/ip firewall nat add action=dst-nat chain=dstnat dst-address=10.1.1.2 dst-address-list="" dst-port=1751 protocol=udp to-addresses=10.0.39.4 to-ports=1751
+/ip firewall nat add action=dst-nat chain=dstnat dst-address=10.1.1.2 dst-port=1194 protocol=udp to-addresses=10.0.39.6 to-ports=1194
+/ip firewall nat add action=dst-nat chain=dstnat dst-address=10.1.1.2 dst-port=5900-5901 protocol=tcp to-addresses=10.0.39.129 to-ports=5900-5901
+/ip firewall nat add action=dst-nat chain=dstnat dst-address=10.1.1.2 dst-port=5900-5901 protocol=udp to-addresses=10.0.39.129 to-ports=5900-5901
+/ip firewall nat add action=dst-nat chain=dstnat dst-address=10.1.1.2 dst-port=8039 log=yes protocol=tcp to-addresses=10.0.39.6 to-ports=8039
+/ip firewall nat add action=dst-nat chain=dstnat dst-address=10.1.1.2 dst-port=80 log=yes protocol=tcp to-addresses=10.0.39.4 to-ports=80
+/ip firewall nat add action=masquerade chain=srcnat comment="masq. vpn traffic" src-address=192.168.0.0/24
+/ip firewall nat add action=masquerade chain=srcnat comment="defconf: masquerade" out-interface=WAN01-P01
+/ip firewall nat add action=masquerade chain=srcnat comment="defconf: masquerade" dst-address=10.0.39.4
+/ip firewall nat add action=masquerade chain=srcnat comment="defconf: masquerade" out-interface=WAN02-P02
+/ip firewall nat add action=masquerade chain=srcnat comment="defconf: masquerade" disabled=yes out-interface=LAN04
+/ip firewall nat add action=redirect chain=dstnat disabled=yes dst-port=80 in-interface=bridge1 log=yes protocol=tcp to-ports=3128
+/ip firewall nat add action=dst-nat chain=dstnat dst-address=10.1.1.2 dst-port=5060-5061 log=yes protocol=udp to-addresses=10.0.39.4 to-ports=5060-5061
+/ip firewall nat add action=dst-nat chain=dstnat dst-address=10.1.1.2 dst-port=2543 protocol=tcp to-addresses=10.0.39.4 to-ports=2543
+/ip firewall nat add action=dst-nat chain=dstnat dst-address=10.1.1.2 dst-port=2543 protocol=udp to-addresses=10.0.39.4 to-ports=2543
+/ip firewall nat add action=dst-nat chain=dstnat dst-address=10.1.1.2 dst-port=10000-20000 protocol=tcp to-addresses=10.0.39.4 to-ports=10000-20000
+/ip firewall nat add action=dst-nat chain=dstnat dst-address=10.1.1.2 dst-port=10000-20000 protocol=udp to-addresses=10.0.39.4 to-ports=10000-20000
+/ip firewall nat add action=dst-nat chain=dstnat dst-address=10.1.1.2 dst-address-list="" dst-port=1751 protocol=udp to-addresses=10.0.39.4 to-ports=1751
+/ip firewall nat add action=dst-nat chain=dstnat dst-address=10.1.1.2 dst-port=1194 protocol=udp to-addresses=10.0.39.6 to-ports=1194
+/ip firewall nat add action=dst-nat chain=dstnat dst-address=10.1.1.2 dst-port=5900-5901 protocol=tcp to-addresses=10.0.39.129 to-ports=5900-5901
+/ip firewall nat add action=dst-nat chain=dstnat dst-address=10.1.1.2 dst-port=5900-5901 protocol=udp to-addresses=10.0.39.129 to-ports=5900-5901
+/ip firewall nat add action=dst-nat chain=dstnat dst-address=10.1.1.2 dst-port=8039 log=yes protocol=tcp to-addresses=10.0.39.6 to-ports=8039
+/ip firewall nat add action=dst-nat chain=dstnat dst-address=10.1.1.2 dst-port=80 log=yes protocol=tcp to-addresses=10.0.39.4 to-ports=80
+/ip firewall nat add action=masquerade chain=srcnat comment="masq. vpn traffic" src-address=192.168.89.0/24
+/ip firewall service-port set sip sip-direct-media=no
+
+
