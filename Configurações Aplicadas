@@ -1,0 +1,115 @@
+Resetando o roteador
+/system reset-configuration no-defaults=yes
+
+Verificando o endereço recebido via modem
+/ip address print
+
+Nomear o nome do equipamento
+/system identity set name="Mikrotik - 9865"
+
+Configurando o NTP
+/system ntp client set enabled=yes
+/system ntp client set server-dns-names=pool.ntp.br
+
+Setando o clock set
+/system clock set time-zone-name=America/Sao_Paulo
+
+Verificando as interfaces
+/interface ethernet print
+
+Nomeação das interfaces
+/interface ethernet set ether1 name=TIM comment="Provedor TIM - 600 MB"
+/interface ethernet set ether2 name=VIVO comment="Provedor VIVO - 600 MB"
+/interface ethernet set ether3 name=OI comment="Provedor OI - 600 MB"
+/interface ethernet set ether4 name=ADM-04 comment="Porta da Bridge"
+/interface ethernet set ether5 name=ADM-05 comment="Porta da Bridge"
+
+Desativando interfaces
+/interface wireless set [ find default-name=wlan1 ] disabled=yes
+
+Cadastrar as interfaces em listas
+/interface list add name=WAN
+/interface list member add comment="Provedor TIM - 600 MB" interface=TIM list=WAN
+/interface list member add comment="Provedor VIVO - 600 MB" interface=VIVO list=WAN
+/interface list member add comment="Provedor OI - 600 MB" interface=OI list=WAN
+
+/interface wireless security-profiles set [ find default=yes ] supplicant-identity=MikroTik
+
+Configurando um Bridge
+/interface bridge add name=Bridge comment="Ponte entre duas portas 04 e 05"
+/interface bridge port add interface=ADM-04 bridge=Bridge 
+/interface bridge port add interface=ADM-05 bridge=Bridge
+
+Setando os endereços de rede LAN e WAN
+/ip address add address=10.0.39.10/24 comment=REDELAN interface=Bridge network=10.0.39.0
+/ip dhcp-client add comment="Rede VIVO - DHCP" disabled=no interface=TIM
+/ip dhcp-client add comment="Rede TIM - DHCP" disabled=no interface=VIVO
+/ip dhcp-client add comment="Rede TIM - DHCP" disabled=no interface=OI
+
+Criando DHCP Server
+/ip pool add name=DHCP-POOL ranges=10.0.39.10-10.0.39.6
+/ip dhcp-server add address-pool=DHCP-POOL disabled=no interface=Bridge name="DHCP Server"
+/ip dhcp-server network add address=10.0.39.0/24 comment="DHCP Server" dns-server=10.0.39.6,10.0.39.10,1.1.1.1,8.8.8.8 domain=nverse-corp.local gateway=10.0.39.10
+
+Criando o DNS Server
+/ip dns set servers=1.1.1.1,8.8.8.8
+
+########################## SECURITY ############################
+Regras tabela NAT
+/ip firewall nat add action=masquerade chain=srcnat out-interface-list=WAN comment="NAT Local"
+
+Regra para liberar protocolo ICPM
+/ip firewall filter add action=accept chain=input comment="Aceita 10 pacotes ICMP" limit=10,5:packet protocol=icmp
+
+Criando um novo usuário administrador
+/user add name=JoelFernandes password=connect@2025 group=full 
+
+Desativando o usuário admin
+/user disable admin
+
+Desatibitar o Btest Server
+/tool bandwidth-server set enabled=no 
+
+Imprimindo a lista de interface
+/interface list member print
+
+Criando uma lista de interfece 
+/interface list add name=Suporte
+
+Configurando a lista de interface
+/interface list member add interface=Bridge list=Suporte
+
+Configurando acesso via MAC apenas para quem é do grupo Suporte
+/tool mac-server set allowed-interface-list=Suporte 
+/tool mac-server mac-winbox set allowed-interface-list=Suporte 
+
+Configurando sobre visibilidade do roteador via protocolo da Mikrotik
+/ip neighbor discovery-settings set discover-interface-list=!WAN
+
+Desabilitar serviços 
+/ip service set telnet disabled=yes
+/ip service set ftp disabled=yes
+/ip service set www disabled=yes
+/ip service set ssh disabled=yes
+/ip service set api disabled=yes
+/ip service set winbox port=9865
+/ip service set api-ssl disabled=yes
+
+Desabilitar portas de serviços
+/ip firewall service-port disable dccp 
+/ip firewall service-port disable ftp 
+/ip firewall service-port disable h323 
+/ip firewall service-port disable irc 
+/ip firewall service-port disable pptp 
+/ip firewall service-port disable sctp 
+/ip firewall service-port disable tftp 
+/ip firewall service-port disable udplite
+
+########################## LOG´s ############################
+Configurando os LOG´s diversos
+/system logging action add disk-file-count=5 disk-file-name=log-erros name=connecterrors target=disk
+/system logging action add disk-file-count=5 disk-file-name=log-acessos name=connectaccess target=disk
+/system logging add action=connecterrors topics=critical 
+/system logging add action=connecterrors topics=error
+/system logging add action=connectaccess topics=account
+#################################################################################################################
