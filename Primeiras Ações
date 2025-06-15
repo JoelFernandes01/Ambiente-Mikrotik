@@ -4,11 +4,16 @@ Resetando o roteador
 Verificando as interfaces
 /interface ethernet print
 
+Nomeação das interfaces
+/interface ethernet set ether1 name=TIM comment="Provedor TIM - 600 MB"
+/interface ethernet set ether2 name=VIVO comment="Provedor VIVO - 600 MB"
+
 Adicionando a primeira interface para receber IP do modem
-/ip dhcp-client add interface=ether1
+/ip dhcp-client add interface=TIM comment="DHCP Client via linha de comando" disabled=no
+/ip dhcp-client add interface=VIVO comment="DHCP Client via linha de comando" disabled=no
 
 Ativando a interface ether1
-/ip dhcp-client enable numbers=0     
+#/ip dhcp-client enable numbers=0     
 
 Verificando o endereço recebido via modem
 /ip address print
@@ -24,6 +29,7 @@ Desatibitar o Btest Server
 
 Criando uma lista de interfece 
 /interface list add name=Suporte
+/interface list add name=WAN
 
 Configurando a lista de interface
 /interface list member add interface=ether5 list=Suporte
@@ -36,8 +42,8 @@ Configurando acesso via MAC apenas para quem é do grupo Suporte
 /tool mac-server mac-winbox set allowed-interface-list=Suporte 
 
 Configurando sobre visibilidade do roteador via protocolo da Mikrotik
-/interface list member add interface=ether1 list=WAN 
-/interface list member add interface=ether2 list=WAN
+/interface list member add interface=TIM list=WAN 
+/interface list member add interface=VIVO list=WAN
 /ip neighbor discovery-settings set discover-interface-list=!WAN
 
 Configurando o DNS
